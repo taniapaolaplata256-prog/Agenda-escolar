@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mi Agenda Estudiantil</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Quicksand:wght@400;500;600;700&display=swap');
+
+  :root {
+    --pink: #FF6B9D;
+    --purple: #A855F7;
+    --lavender: #C084FC;
+    --mint: #34D399;
+    --sky: #38BDF8;
+    --yellow: #FBBF24;
+    --orange: #FB923C;
+    --bg: #F0F4FF;
+    --card: #FFFFFF;
+    --text: #2D2B55;
+    --muted: #7C6FA0;
+    --danger: #F43F5E;
+    --shadow: 0 4px 20px rgba(168,85,247,0.13);
+    --radius: 18px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── PÁGINAS ── */
+  .page { display: none; min-height: 100vh; }
+  .page.active { display: flex; flex-direction: column; }
+
+  /* ── BIENVENIDA ── */
+  #page-welcome {
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #667eea 0%, #a855f7 50%, #ec4899 100%);
+    padding: 24px;
+  }
+
+  .welcome-card {
+    background: white;
+    border-radius: 28px;
+    padding: 40px 36px;
+    max-width: 420px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    text-align: center;
+  }
+
+  .welcome-card .emoji-big { font-size: 64px; margin-bottom: 12px; display: block; }
+  .welcome-card h1 { font-size: 28px; font-weight: 900; color: var(--purple); margin-bottom: 6px; }
+  .welcome-card p { color: var(--muted); margin-bottom: 28px; font-size: 15px; }
+
+  .field-group { margin-bottom: 18px; text-align: left; }
+  .field-group label { display: block; font-weight: 700; color: var(--text); margin-bottom: 6px; font-size: 14px; }
+  .field-group input, .field-group select {
+    width: 100%; padding: 12px 16px;
+    border: 2.5px solid #E5E7EB;
+    border-radius: 12px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 15px;
+    color: var(--text);
+    transition: border-color 0.2s;
+    background: #FAFAFA;
+  }
+  .field-group input:focus, .field-group select:focus {
+    outline: none; border-color: var(--purple);
+    background: white;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--purple), var(--pink));
+    color: white;
+    border: none;
+    padding: 14px 32px;
+    border-radius: 50px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 16px;
+    font-weight: 800;
+    cursor: pointer;
+    width: 100%;
+    transition: transform 0.15s, box-shadow 0.15s;
+    box-shadow: 0 6px 20px rgba(168,85,247,0.4);
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(168,85,247,0.5); }
+  .btn-primary:active { transform: translateY(0); }
+
+  /* ── HEADER ── */
+  .app-header {
+    background: linear-gradient(135deg, #667eea, #a855f7);
+    color: white;
+    padding: 16px 20px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 4px 20px rgba(102,126,234,0.3);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .header-user { font-size: 14px; opacity: 0.9; }
+  .header-user strong { font-size: 16px; display: block; }
+  .header-logo { font-size: 22px; font-weight: 900; }
+
+  /* ── NAV ── */
+  .bottom-nav {
+    display: flex;
+    background: white;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+    position: sticky; bottom: 0;
+  }
+  .nav-btn {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    padding: 10px 4px 8px;
+    background: none; border: none; cursor: pointer;
+    font-family: 'Nunito', sans-serif;
+    font-size: 11px; font-weight: 700;
+    color: var(--muted);
+    transition: color 0.2s;
+    gap: 3px;
+  }
+  .nav-btn .nav-icon { font-size: 22px; }
+  .nav-btn.active { color: var(--purple); }
+  .nav-btn.active .nav-icon { transform: scale(1.15); }
+
+  /* ── CONTENIDO ── */
+  .content { flex: 1; padding: 20px; overflow-y: auto; }
+
+  /* ── SECCIONES INTERNAS ── */
+  .section { display: none; }
+  .section.active { display: block; }
+
+  .section-title {
+    font-size: 22px; font-weight: 900; color: var(--text);
+    margin-bottom: 18px; display: flex; align-items: center; gap: 8px;
+  }
+
+  /* ── HORARIO ── */
+  .schedule-controls {
+    display: flex; flex-wrap: wrap; gap: 10px;
+    margin-bottom: 20px;
+  }
+  .schedule-controls input, .schedule-controls select {
+    flex: 1; min-width: 110px;
+    padding: 10px 12px;
+    border: 2px solid #E5E7EB;
+    border-radius: 12px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 14px;
+    background: white;
+  }
+  .schedule-controls input:focus, .schedule-controls select:focus {
+    outline: none; border-color: var(--purple);
+  }
+  .btn-add {
+    background: linear-gradient(135deg, var(--mint), var(--sky));
+    color: white; border: none;
+    padding: 10px 20px; border-radius: 12px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 14px; font-weight: 800;
+    cursor: pointer; white-space: nowrap;
+    transition: transform 0.15s;
+  }
+  .btn-add:hover { transform: translateY(-1px); }
+
+  .schedule-grid { display: flex; flex-direction: column; gap: 10px; }
+  .schedule-item {
+    background: white;
+    border-radius: 14px;
+    padding: 14px 16px;
+    display: flex; align-items: center; gap: 12px;
+    box-shadow: var(--shadow);
+    transition: transform 0.15s;
+  }
+  .schedule-item:hover { transform: translateY(-2px); }
+  .schedule-dot {
+    width: 12px; height: 12px; border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .schedule-info { flex: 1; }
+  .schedule-day { font-size: 11px; font-weight: 800; color: var(--purple); text-transform: uppercase; letter-spacing: 0.05em; }
+  .schedule-subject { font-size: 15px; font-weight: 700; }
+  .schedule-time { font-size: 13px; color: var(--muted); }
+  .btn-edit {
+    background: #EEF2FF; border: none; border-radius: 8px;
+    padding: 6px 10px; cursor: pointer; font-size: 14px;
+    transition: background 0.15s;
+  }
+  .btn-edit:hover { background: #DDD6FE; }
+  .btn-del {
+    background: #FFF1F2; border: none; border-radius: 8px;
+    padding: 6px 10px; cursor: pointer; font-size: 14px;
+    transition: background 0.15s;
+  }
+  .btn-del:hover { background: #FFE4E6; }
+
+  /* ── TAREAS ── */
+  .task-controls {
+    display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px;
+  }
+  .task-controls input, .task-controls select, .task-controls textarea {
+    flex: 1; min-width: 130px;
+    padding: 10px 12px;
+    border: 2px solid #E5E7EB;
+    border-radius: 12px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 14px; background: white;
+    resize: none;
+  }
+  .task-controls input:focus, .task-controls select:focus, .task-controls textarea:focus {
+    outline: none; border-color: var(--pink);
+  }
+
+  .tasks-list { display: flex; flex-direction: column; gap: 12px; }
+  .task-card {
+    background: white;
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: var(--shadow);
+    border-left: 5px solid var(--pink);
+    transition: transform 0.15s, opacity 0.3s;
+  }
+  .task-card.done {
+    border-left-color: var(--mint);
+    opacity: 0.7;
+  }
+  .task-card.done .task-title { text-decoration: line-through; }
+  .task-header { display: flex; align-items: flex-start; gap: 10px; }
+  .task-check {
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 2.5px solid #D1D5DB; cursor: pointer;
+    flex-shrink: 0; background: white;
+    transition: all 0.2s; margin-top: 1px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .task-card.done .task-check {
+    background: var(--mint); border-color: var(--mint); color: white; font-size: 13px;
+  }
+  .task-body { flex: 1; }
+  .task-subject { font-size: 11px; font-weight: 800; color: var(--pink); text-transform: uppercase; letter-spacing: 0.05em; }
+  .task-title { font-size: 15px; font-weight: 700; margin: 2px 0 4px; }
+  .task-desc { font-size: 13px; color: var(--muted); }
+  .task-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 10px; padding-top: 10px; border-top: 1px solid #F3F4F6;
+  }
+  .task-date { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 4px; }
+  .task-date.urgent { color: var(--danger); font-weight: 700; }
+  .task-actions { display: flex; gap: 6px; }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(4px);
+    z-index: 200;
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal {
+    background: white; border-radius: 24px;
+    padding: 28px; width: 100%; max-width: 400px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    transform: translateY(20px);
+    transition: transform 0.2s;
+  }
+  .modal-overlay.open .modal { transform: translateY(0); }
+  .modal h3 { font-size: 20px; font-weight: 900; margin-bottom: 16px; color: var(--purple); }
+  .modal .field-group { margin-bottom: 14px; }
+  .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+  .btn-secondary {
+    flex: 1; background: #F3F4F6; border: none;
+    padding: 12px; border-radius: 12px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 15px; font-weight: 700;
+    cursor: pointer; color: var(--muted);
+  }
+  .btn-save {
+    flex: 2; background: linear-gradient(135deg, var(--purple), var(--pink));
+    border: none; padding: 12px; border-radius: 12px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 15px; font-weight: 800;
+    cursor: pointer; color: white;
+  }
+
+  /* ── NOTIFICACIÓN ── */
+  .notification-toast {
+    position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px);
+    background: white; border-radius: 18px; padding: 16px 20px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    z-index: 300; display: flex; align-items: center; gap: 12px;
+    min-width: 300px; max-width: 90vw;
+    transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    border-left: 5px solid var(--yellow);
+  }
+  .notification-toast.show { transform: translateX(-50%) translateY(0); }
+  .notif-icon { font-size: 28px; }
+  .notif-body { flex: 1; }
+  .notif-title { font-weight: 800; font-size: 14px; color: var(--text); }
+  .notif-text { font-size: 13px; color: var(--muted); margin-top: 2px; }
+  .notif-close {
+    background: none; border: none; cursor: pointer;
+    font-size: 18px; color: var(--muted); padding: 4px;
+  }
+
+  /* ── GATITO ── */
+  .cat-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(6px);
+    z-index: 400;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.3s;
+    padding: 20px;
+  }
+  .cat-overlay.show { opacity: 1; pointer-events: all; }
+  .cat-box {
+    background: white; border-radius: 28px;
+    padding: 32px; text-align: center;
+    max-width: 340px; width: 100%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    transform: scale(0.8);
+    transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .cat-overlay.show .cat-box { transform: scale(1); }
+  .cat-svg { width: 150px; height: 150px; margin: 0 auto 16px; }
+  .cat-msg {
+    font-size: 17px; font-weight: 800; line-height: 1.4;
+    padding: 14px 18px; border-radius: 14px; margin-bottom: 20px;
+  }
+  .cat-msg.happy { background: #F0FDF4; color: #166534; }
+  .cat-msg.angry { background: #FFF7ED; color: #9A3412; }
+  .btn-cat-close {
+    background: linear-gradient(135deg, var(--purple), var(--pink));
+    color: white; border: none; padding: 12px 32px;
+    border-radius: 50px; font-family: 'Nunito', sans-serif;
+    font-size: 15px; font-weight: 800; cursor: pointer;
+  }
+
+  /* ── COLORS POR DÍA ── */
+  .color-lunes    { background: #A855F7; }
+  .color-martes   { background: #38BDF8; }
+  .color-miercoles{ background: #34D399; }
+  .color-jueves   { background: #FBBF24; }
+  .color-viernes  { background: #F43F5E; }
+  .color-sabado   { background: #FB923C; }
+  .color-domingo  { background: #6366F1; }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    text-align: center; padding: 48px 20px;
+    color: var(--muted);
+  }
+  .empty-state .empty-icon { font-size: 56px; margin-bottom: 12px; }
+  .empty-state p { font-size: 15px; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 480px) {
+    .welcome-card { padding: 28px 20px; }
+    .content { padding: 16px; }
+  }
+
+  /* ── ANIMACIONES ── */
+  @keyframes bounce-in {
+    0% { transform: scale(0); }
+    70% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+  }
+  .bounce-in { animation: bounce-in 0.4s ease forwards; }
+
+  @keyframes pulse-ring {
+    0% { box-shadow: 0 0 0 0 rgba(168,85,247,0.4); }
+    70% { box-shadow: 0 0 0 12px rgba(168,85,247,0); }
+    100% { box-shadow: 0 0 0 0 rgba(168,85,247,0); }
+  }
+  .pulse { animation: pulse-ring 1.5s infinite; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════ PÁGINA BIENVENIDA ═══════════════════════════════ -->
+<div id="page-welcome" class="page active">
+  <div class="welcome-card">
+    <span class="emoji-big">📚✨</span>
+    <h1>Mi Agenda Estudiantil</h1>
+    <p>Ingresa tus datos para comenzar</p>
+
+    <div class="field-group">
+      <label>👤 Tu nombre</label>
+      <input type="text" id="inp-name" placeholder="¿Cómo te llamas?" />
+    </div>
+    <div class="field-group">
+      <label>🎂 Tu edad</label>
+      <input type="number" id="inp-age" placeholder="Ej: 15" min="5" max="30" />
+    </div>
+    <div class="field-group">
+      <label>🏫 Grado escolar</label>
+      <select id="inp-grade">
+        <option value="">Selecciona tu grado</option>
+        <optgroup label="Primaria">
+          <option>1° Primaria</option><option>2° Primaria</option>
+          <option>3° Primaria</option><option>4° Primaria</option>
+          <option>5° Primaria</option><option>6° Primaria</option>
+        </optgroup>
+        <optgroup label="Secundaria">
+          <option>1° Secundaria</option><option>2° Secundaria</option><option>3° Secundaria</option>
+        </optgroup>
+        <optgroup label="Preparatoria">
+          <option>1° Preparatoria</option><option>2° Preparatoria</option>
+          <option>3° Preparatoria</option><option>4° Preparatoria</option>
+          <option>5° Preparatoria</option><option>6° Preparatoria</option>
+        </optgroup>
+        <optgroup label="Universidad">
+          <option>1° Semestre</option><option>2° Semestre</option>
+          <option>3° Semestre</option><option>4° Semestre</option>
+          <option>5° Semestre</option><option>6° Semestre</option>
+          <option>7° Semestre</option><option>8° Semestre</option>
+          <option>9° Semestre</option><option>10° Semestre</option>
+        </optgroup>
+      </select>
+    </div>
+
+    <button class="btn-primary" onclick="startApp()">¡Ir a mi agenda! 🚀</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ PÁGINA PRINCIPAL ═══════════════════════════════ -->
+<div id="page-app" class="page">
+
+  <header class="app-header">
+    <div class="header-user">
+      <strong id="header-name">Estudiante</strong>
+      <span id="header-info"></span>
+    </div>
+    <div class="header-logo">📖</div>
+  </header>
+
+  <div class="content">
+
+    <!-- HORARIO -->
+    <div id="sec-schedule" class="section active">
+      <div class="section-title">🗓️ Mi Horario</div>
+
+      <div class="schedule-controls">
+        <select id="sch-day">
+          <option value="lunes">Lunes</option>
+          <option value="martes">Martes</option>
+          <option value="miercoles">Miércoles</option>
+          <option value="jueves">Jueves</option>
+          <option value="viernes">Viernes</option>
+          <option value="sabado">Sábado</option>
+          <option value="domingo">Domingo</option>
+        </select>
+        <input type="time" id="sch-start" placeholder="Inicio" />
+        <input type="time" id="sch-end" placeholder="Fin" />
+        <input type="text" id="sch-subject" placeholder="Materia" style="flex: 2;" />
+        <button class="btn-add" onclick="addScheduleItem()">+ Agregar</button>
+      </div>
+
+      <div class="schedule-grid" id="schedule-grid">
+        <div class="empty-state" id="schedule-empty">
+          <div class="empty-icon">📅</div>
+          <p>No hay clases aún.<br>¡Agrega tu horario!</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAREAS -->
+    <div id="sec-tasks" class="section">
+      <div class="section-title">📝 Mis Tareas</div>
+
+      <div class="task-controls">
+        <select id="task-subject">
+          <option value="">Selecciona materia</option>
+          <option>Matemáticas</option><option>Español</option>
+          <option>Ciencias</option><option>Historia</option>
+          <option>Geografía</option><option>Inglés</option>
+          <option>Arte</option><option>Educación Física</option>
+          <option>Química</option><option>Física</option>
+          <option>Biología</option><option>Otra</option>
+        </select>
+        <input type="text" id="task-title" placeholder="Nombre de la tarea" style="flex: 2;" />
+        <textarea id="task-desc" placeholder="¿De qué trata?" rows="2" style="flex: 3;"></textarea>
+        <input type="date" id="task-date" />
+        <button class="btn-add" style="background: linear-gradient(135deg, var(--pink), var(--purple));" onclick="addTask()">+ Agregar tarea</button>
+      </div>
+
+      <div class="tasks-list" id="tasks-list">
+        <div class="empty-state" id="tasks-empty">
+          <div class="empty-icon">✅</div>
+          <p>¡Sin tareas pendientes!<br>Agrega tus primeras tareas.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <nav class="bottom-nav">
+    <button class="nav-btn active" onclick="showSection('schedule', this)">
+      <span class="nav-icon">🗓️</span> Horario
+    </button>
+    <button class="nav-btn" onclick="showSection('tasks', this)">
+      <span class="nav-icon">📝</span> Tareas
+    </button>
+    <button class="nav-btn" onclick="checkAllTasks()">
+      <span class="nav-icon">🐱</span> Estado
+    </button>
+  </nav>
+
+</div>
+
+<!-- ═══════════════════════════════ MODAL EDITAR HORARIO ═══════════════════════════════ -->
+<div class="modal-overlay" id="modal-schedule">
+  <div class="modal">
+    <h3>✏️ Editar Clase</h3>
+    <div class="field-group">
+      <label>Día</label>
+      <select id="edit-sch-day">
+        <option value="lunes">Lunes</option><option value="martes">Martes</option>
+        <option value="miercoles">Miércoles</option><option value="jueves">Jueves</option>
+        <option value="viernes">Viernes</option><option value="sabado">Sábado</option>
+        <option value="domingo">Domingo</option>
+      </select>
+    </div>
+    <div class="field-group">
+      <label>Hora inicio</label>
+      <input type="time" id="edit-sch-start" />
+    </div>
+    <div class="field-group">
+      <label>Hora fin</label>
+      <input type="time" id="edit-sch-end" />
+    </div>
+    <div class="field-group">
+      <label>Materia</label>
+      <input type="text" id="edit-sch-subject" placeholder="Nombre de la materia" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('modal-schedule')">Cancelar</button>
+      <button class="btn-save" onclick="saveScheduleEdit()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ MODAL EDITAR TAREA ═══════════════════════════════ -->
+<div class="modal-overlay" id="modal-task">
+  <div class="modal">
+    <h3>✏️ Editar Tarea</h3>
+    <div class="field-group">
+      <label>Materia</label>
+      <select id="edit-task-subject">
+        <option>Matemáticas</option><option>Español</option>
+        <option>Ciencias</option><option>Historia</option>
+        <option>Geografía</option><option>Inglés</option>
+        <option>Arte</option><option>Educación Física</option>
+        <option>Química</option><option>Física</option>
+        <option>Biología</option><option>Otra</option>
+      </select>
+    </div>
+    <div class="field-group">
+      <label>Nombre de la tarea</label>
+      <input type="text" id="edit-task-title" />
+    </div>
+    <div class="field-group">
+      <label>Descripción</label>
+      <textarea id="edit-task-desc" rows="3" style="width:100%; padding:10px; border:2px solid #E5E7EB; border-radius:10px; font-family:'Nunito',sans-serif; font-size:14px; resize:none;"></textarea>
+    </div>
+    <div class="field-group">
+      <label>Fecha límite</label>
+      <input type="date" id="edit-task-date" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('modal-task')">Cancelar</button>
+      <button class="btn-save" onclick="saveTaskEdit()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ NOTIFICACIÓN ═══════════════════════════════ -->
+<div class="notification-toast" id="notif-toast">
+  <div class="notif-icon">🔔</div>
+  <div class="notif-body">
+    <div class="notif-title" id="notif-title">Recordatorio</div>
+    <div class="notif-text" id="notif-text"></div>
+  </div>
+  <button class="notif-close" onclick="closeNotif()">✕</button>
+</div>
+
+<!-- ═══════════════════════════════ OVERLAY GATITO ═══════════════════════════════ -->
+<div class="cat-overlay" id="cat-overlay">
+  <div class="cat-box">
+    <svg class="cat-svg" id="cat-svg" viewBox="0 0 150 150" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div class="cat-msg" id="cat-msg"></div>
+    <button class="btn-cat-close" onclick="closeCat()">¡Entendido! 😊</button>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+//  ESTADO
+// ══════════════════════════════════════════
+let userData = {};
+let scheduleItems = JSON.parse(localStorage.getItem('agenda_schedule') || '[]');
+let taskItems = JSON.parse(localStorage.getItem('agenda_tasks') || '[]');
+let editingScheduleId = null;
+let editingTaskId = null;
+let notifTimeout = null;
+let reminderInterval = null;
+
+// ══════════════════════════════════════════
+//  AUDIO — burbuja
+// ══════════════════════════════════════════
+function playBubbleSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const now = ctx.currentTime;
+    for (let i = 0; i < 5; i++) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.setValueAtTime(300 + i * 120, now + i * 0.08);
+      osc.frequency.exponentialRampToValueAtTime(600 + i * 80, now + i * 0.08 + 0.06);
+      gain.gain.setValueAtTime(0.18, now + i * 0.08);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.12);
+      osc.start(now + i * 0.08);
+      osc.stop(now + i * 0.08 + 0.14);
+    }
+  } catch(e) {}
+}
+
+// ══════════════════════════════════════════
+//  INICIO
+// ══════════════════════════════════════════
+function startApp() {
+  const name = document.getElementById('inp-name').value.trim();
+  const age  = document.getElementById('inp-age').value.trim();
+  const grade= document.getElementById('inp-grade').value;
+  if (!name || !age || !grade) { alert('¡Completa todos los datos! 😊'); return; }
+  userData = { name, age, grade };
+  document.getElementById('header-name').textContent = '¡Hola, ' + name + '! 👋';
+  document.getElementById('header-info').textContent = grade + ' · ' + age + ' años';
+  document.getElementById('page-welcome').classList.remove('active');
+  document.getElementById('page-app').classList.add('active');
+  renderSchedule();
+  renderTasks();
+  startReminders();
+}
+
+// ══════════════════════════════════════════
+//  NAVEGACIÓN SECCIONES
+// ══════════════════════════════════════════
+function showSection(name, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('sec-' + name).classList.add('active');
+  if (btn) btn.classList.add('active');
+}
+
+// ══════════════════════════════════════════
+//  HORARIO
+// ══════════════════════════════════════════
+function addScheduleItem() {
+  const day     = document.getElementById('sch-day').value;
+  const start   = document.getElementById('sch-start').value;
+  const end     = document.getElementById('sch-end').value;
+  const subject = document.getElementById('sch-subject').value.trim();
+  if (!subject) { alert('Escribe el nombre de la materia'); return; }
+  const item = { id: Date.now(), day, start, end, subject };
+  scheduleItems.push(item);
+  saveSchedule();
+  renderSchedule();
+  document.getElementById('sch-subject').value = '';
+}
+
+function renderSchedule() {
+  const grid = document.getElementById('schedule-grid');
+  const empty = document.getElementById('schedule-empty');
+  const order = ['lunes','martes','miercoles','jueves','viernes','sabado','domingo'];
+  const sorted = [...scheduleItems].sort((a,b) => {
+    const da = order.indexOf(a.day), db = order.indexOf(b.day);
+    if (da !== db) return da - db;
+    return (a.start||'').localeCompare(b.start||'');
+  });
+  // quitar cards viejas
+  grid.querySelectorAll('.schedule-item').forEach(el => el.remove());
+  empty.style.display = sorted.length ? 'none' : 'block';
+  sorted.forEach(item => {
+    const el = document.createElement('div');
+    el.className = 'schedule-item bounce-in';
+    el.innerHTML = `
+      <div class="schedule-dot color-${item.day}"></div>
+      <div class="schedule-info">
+        <div class="schedule-day">${item.day}</div>
+        <div class="schedule-subject">${item.subject}</div>
+        <div class="schedule-time">${fmtTime(item.start)} ${item.end ? '- ' + fmtTime(item.end) : ''}</div>
+      </div>
+      <button class="btn-edit" onclick="openEditSchedule(${item.id})">✏️</button>
+      <button class="btn-del" onclick="deleteSchedule(${item.id})">🗑️</button>
+    `;
+    grid.appendChild(el);
+  });
+}
+
+function fmtTime(t) {
+  if (!t) return '';
+  const [h, m] = t.split(':');
+  const hh = parseInt(h);
+  const ampm = hh >= 12 ? 'PM' : 'AM';
+  return `${hh % 12 || 12}:${m} ${ampm}`;
+}
+
+function deleteSchedule(id) {
+  scheduleItems = scheduleItems.filter(i => i.id !== id);
+  saveSchedule();
+  renderSchedule();
+}
+
+function openEditSchedule(id) {
+  editingScheduleId = id;
+  const item = scheduleItems.find(i => i.id === id);
+  if (!item) return;
+  document.getElementById('edit-sch-day').value     = item.day;
+  document.getElementById('edit-sch-start').value   = item.start;
+  document.getElementById('edit-sch-end').value     = item.end;
+  document.getElementById('edit-sch-subject').value = item.subject;
+  openModal('modal-schedule');
+}
+
+function saveScheduleEdit() {
+  const item = scheduleItems.find(i => i.id === editingScheduleId);
+  if (!item) return;
+  item.day     = document.getElementById('edit-sch-day').value;
+  item.start   = document.getElementById('edit-sch-start').value;
+  item.end     = document.getElementById('edit-sch-end').value;
+  item.subject = document.getElementById('edit-sch-subject').value.trim();
+  saveSchedule();
+  renderSchedule();
+  closeModal('modal-schedule');
+}
+
+function saveSchedule() { localStorage.setItem('agenda_schedule', JSON.stringify(scheduleItems)); }
+
+// ══════════════════════════════════════════
+//  TAREAS
+// ══════════════════════════════════════════
+function addTask() {
+  const subject = document.getElementById('task-subject').value;
+  const title   = document.getElementById('task-title').value.trim();
+  const desc    = document.getElementById('task-desc').value.trim();
+  const date    = document.getElementById('task-date').value;
+  if (!subject || !title || !date) { alert('Completa la materia, el nombre y la fecha límite 📅'); return; }
+  const task = { id: Date.now(), subject, title, desc, date, done: false };
+  taskItems.push(task);
+  saveTasks();
+  renderTasks();
+  document.getElementById('task-subject').value = '';
+  document.getElementById('task-title').value   = '';
+  document.getElementById('task-desc').value    = '';
+  document.getElementById('task-date').value    = '';
+}
+
+function renderTasks() {
+  const list = document.getElementById('tasks-list');
+  const empty = document.getElementById('tasks-empty');
+  list.querySelectorAll('.task-card').forEach(el => el.remove());
+  empty.style.display = taskItems.length ? 'none' : 'block';
+  const sorted = [...taskItems].sort((a,b) => new Date(a.date) - new Date(b.date));
+  sorted.forEach(task => {
+    const el = document.createElement('div');
+    el.className = 'task-card' + (task.done ? ' done' : '') + ' bounce-in';
+    const daysLeft = getDaysLeft(task.date);
+    const urgentClass = (!task.done && daysLeft <= 2) ? 'urgent' : '';
+    const urgentLabel = !task.done ? (daysLeft < 0 ? '⚠️ Vencida' : daysLeft === 0 ? '🔥 ¡Hoy!' : daysLeft === 1 ? '⏰ Mañana' : `📅 En ${daysLeft} días`) : '✅ Completada';
+    el.innerHTML = `
+      <div class="task-header">
+        <div class="task-check" onclick="toggleTask(${task.id})">${task.done ? '✓' : ''}</div>
+        <div class="task-body">
+          <div class="task-subject">${task.subject}</div>
+          <div class="task-title">${task.title}</div>
+          ${task.desc ? `<div class="task-desc">${task.desc}</div>` : ''}
+        </div>
+      </div>
+      <div class="task-footer">
+        <div class="task-date ${urgentClass}">${urgentLabel}</div>
+        <div class="task-actions">
+          <button class="btn-edit" onclick="openEditTask(${task.id})">✏️</button>
+          <button class="btn-del" onclick="deleteTask(${task.id})">🗑️</button>
+        </div>
+      </div>
+    `;
+    list.appendChild(el);
+  });
+}
+
+function getDaysLeft(dateStr) {
+  const now  = new Date(); now.setHours(0,0,0,0);
+  const due  = new Date(dateStr + 'T00:00:00');
+  return Math.round((due - now) / 86400000);
+}
+
+function toggleTask(id) {
+  const task = taskItems.find(t => t.id === id);
+  if (!task) return;
+  task.done = !task.done;
+  saveTasks();
+  renderTasks();
+}
+
+function deleteTask(id) {
+  taskItems = taskItems.filter(t => t.id !== id);
+  saveTasks();
+  renderTasks();
+}
+
+function openEditTask(id) {
+  editingTaskId = id;
+  const task = taskItems.find(t => t.id === id);
+  if (!task) return;
+  document.getElementById('edit-task-subject').value = task.subject;
+  document.getElementById('edit-task-title').value   = task.title;
+  document.getElementById('edit-task-desc').value    = task.desc;
+  document.getElementById('edit-task-date').value    = task.date;
+  openModal('modal-task');
+}
+
+function saveTaskEdit() {
+  const task = taskItems.find(t => t.id === editingTaskId);
+  if (!task) return;
+  task.subject = document.getElementById('edit-task-subject').value;
+  task.title   = document.getElementById('edit-task-title').value.trim();
+  task.desc    = document.getElementById('edit-task-desc').value.trim();
+  task.date    = document.getElementById('edit-task-date').value;
+  saveTasks();
+  renderTasks();
+  closeModal('modal-task');
+}
+
+function saveTasks() { localStorage.setItem('agenda_tasks', JSON.stringify(taskItems)); }
+
+// ══════════════════════════════════════════
+//  MODALES
+// ══════════════════════════════════════════
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+// cerrar con click fuera
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) overlay.classList.remove('open');
+  });
+});
+
+// ══════════════════════════════════════════
+//  NOTIFICACIONES / RECORDATORIOS
+// ══════════════════════════════════════════
+function showNotification(title, text) {
+  document.getElementById('notif-title').textContent = title;
+  document.getElementById('notif-text').textContent  = text;
+  const toast = document.getElementById('notif-toast');
+  toast.classList.add('show');
+  playBubbleSound();
+  clearTimeout(notifTimeout);
+  notifTimeout = setTimeout(closeNotif, 6000);
+}
+
+function closeNotif() {
+  document.getElementById('notif-toast').classList.remove('show');
+}
+
+function startReminders() {
+  checkReminders();
+  reminderInterval = setInterval(checkReminders, 60000); // cada 1 min
+}
+
+function checkReminders() {
+  const pending = taskItems.filter(t => !t.done);
+  pending.forEach(task => {
+    const days = getDaysLeft(task.date);
+    if (days === 1) {
+      showNotification('⏰ ¡Entrega mañana!',
+        `📚 ${task.subject}: "${task.title}" vence el ${fmtDate(task.date)}`);
+    } else if (days === 0) {
+      showNotification('🔥 ¡Entrega HOY!',
+        `📚 ${task.subject}: "${task.title}" — ¡No olvides entregarlo!`);
+    } else if (days < 0) {
+      showNotification('⚠️ Tarea vencida',
+        `📚 ${task.subject}: "${task.title}" venció el ${fmtDate(task.date)}`);
+    }
+  });
+}
+
+function fmtDate(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  return d.toLocaleDateString('es-MX', { day:'numeric', month:'long' });
+}
+
+// ══════════════════════════════════════════
+//  GATITO
+// ══════════════════════════════════════════
+function checkAllTasks() {
+  if (taskItems.length === 0) {
+    showCat('happy');
+    return;
+  }
+  const allDone = taskItems.every(t => t.done);
+  showCat(allDone ? 'happy' : 'angry');
+}
+
+function showCat(mood) {
+  const svg = document.getElementById('cat-svg');
+  const msg = document.getElementById('cat-msg');
+
+  if (mood === 'happy') {
+    svg.innerHTML = happyCatSVG();
+    msg.className = 'cat-msg happy';
+    msg.textContent = '🎉 ¡Felicidades! ¡Completaste todos tus deberes! ¡Eres increíble! 🌟';
+  } else {
+    svg.innerHTML = angryCatSVG();
+    msg.className = 'cat-msg angry';
+    msg.textContent = '😠 ¡Oye! Tienes que aprender a ser más responsable. ¡Completa tus tareas!';
+  }
+
+  document.getElementById('cat-overlay').classList.add('show');
+  playBubbleSound();
+}
+
+function closeCat() {
+  document.getElementById('cat-overlay').classList.remove('show');
+}
+
+function happyCatSVG() {
+  return `
+  <!-- Cuerpo naranja feliz -->
+  <ellipse cx="75" cy="105" rx="42" ry="38" fill="#FB923C"/>
+  <!-- Cabeza -->
+  <circle cx="75" cy="68" r="34" fill="#FB923C"/>
+  <!-- Orejas -->
+  <polygon points="45,45 38,22 58,40" fill="#FB923C"/>
+  <polygon points="105,45 112,22 92,40" fill="#FB923C"/>
+  <polygon points="47,43 42,28 57,40" fill="#FECACA"/>
+  <polygon points="103,43 108,28 93,40" fill="#FECACA"/>
+  <!-- Cara feliz -->
+  <!-- Ojos cerrados de felicidad -->
+  <path d="M60,65 Q65,60 70,65" stroke="#2D2B55" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <path d="M80,65 Q85,60 90,65" stroke="#2D2B55" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <!-- Mejillas -->
+  <ellipse cx="57" cy="73" rx="8" ry="5" fill="#FBBF24" opacity="0.5"/>
+  <ellipse cx="93" cy="73" rx="8" ry="5" fill="#FBBF24" opacity="0.5"/>
+  <!-- Nariz -->
+  <ellipse cx="75" cy="74" rx="4" ry="3" fill="#F43F5E"/>
+  <!-- Boca sonriente -->
+  <path d="M67,80 Q75,89 83,80" stroke="#2D2B55" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <!-- Bigotes -->
+  <line x1="45" y1="72" x2="66" y2="75" stroke="#2D2B55" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="45" y1="78" x2="66" y2="77" stroke="#2D2B55" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="105" y1="72" x2="84" y2="75" stroke="#2D2B55" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="105" y1="78" x2="84" y2="77" stroke="#2D2B55" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- Cola -->
+  <path d="M117,125 Q135,105 125,90 Q118,80 120,100" stroke="#FB923C" stroke-width="10" fill="none" stroke-linecap="round"/>
+  <!-- Patas -->
+  <ellipse cx="56" cy="138" rx="15" ry="10" fill="#FB923C"/>
+  <ellipse cx="94" cy="138" rx="15" ry="10" fill="#FB923C"/>
+  <!-- Estrellitas -->
+  <text x="18" y="38" font-size="16">⭐</text>
+  <text x="118" y="38" font-size="16">⭐</text>
+  <text x="68" y="18" font-size="14">✨</text>
+  `;
+}
+
+function angryCatSVG() {
+  return `
+  <!-- Cuerpo naranja enojado -->
+  <ellipse cx="75" cy="108" rx="42" ry="36" fill="#FB923C"/>
+  <!-- Cabeza -->
+  <circle cx="75" cy="68" r="34" fill="#FB923C"/>
+  <!-- Orejas enojadas -->
+  <polygon points="42,42 35,18 60,38" fill="#FB923C"/>
+  <polygon points="108,42 115,18 90,38" fill="#FB923C"/>
+  <polygon points="44,40 39,24 58,38" fill="#FECACA"/>
+  <polygon points="106,40 111,24 92,38" fill="#FECACA"/>
+  <!-- Cejas enojadas -->
+  <line x1="56" y1="57" x2="73" y2="62" stroke="#2D2B55" stroke-width="3.5" stroke-linecap="round"/>
+  <line x1="94" y1="57" x2="77" y2="62" stroke="#2D2B55" stroke-width="3.5" stroke-linecap="round"/>
+  <!-- Ojos enojados -->
+  <ellipse cx="64" cy="67" rx="7" ry="7" fill="#2D2B55"/>
+  <ellipse cx="86" cy="67" rx="7" ry="7" fill="#2D2B55"/>
+  <ellipse cx="66" cy="65" rx="2.5" ry="2.5" fill="white"/>
+  <ellipse cx="88" cy="65" rx="2.5" ry="2.5" fill="white"/>
+  <!-- Nariz -->
+  <ellipse cx="75" cy="76" rx="4" ry="3" fill="#F43F5E"/>
+  <!-- Boca enojada -->
+  <path d="M64,84 Q75,78 86,84" stroke="#2D2B55" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <!-- Bigotes -->
+  <line x1="42" y1="73" x2="64" y2="76" stroke="#2D2B55" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="42" y1="80" x2="64" y2="78" stroke="#2D2B55" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="108" y1="73" x2="86" y2="76" stroke="#2D2B55" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="108" y1="80" x2="86" y2="78" stroke="#2D2B55" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- Cola erizada -->
+  <path d="M120,128 Q140,108 130,88 Q124,75 128,98" stroke="#FB923C" stroke-width="10" fill="none" stroke-linecap="round"/>
+  <!-- Patas -->
+  <ellipse cx="56" cy="138" rx="15" ry="10" fill="#FB923C"/>
+  <ellipse cx="94" cy="138" rx="15" ry="10" fill="#FB923C"/>
+  <!-- Líneas de enojo -->
+  <text x="20" y="38" font-size="14">💢</text>
+  <text x="112" y="38" font-size="14">💢</text>
+  `;
+}
+
+// ══════════════════════════════════════════
+//  INIT: recordatorio al cargar si ya hay datos
+// ══════════════════════════════════════════
+// (Los recordatorios arrancan al hacer login)
+</script>
+</body>
+</html>
